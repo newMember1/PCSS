@@ -5,10 +5,13 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-out vec4 worldPos;
+uniform mat4 lightSpaceMatrix;
+
+out vec4 lightSpacePos;
 
 void main()
 {
     gl_Position = projection * view * model * vec4(pos, 1.0f);
-    worldPos = model * vec4(pos, 1.0);
+
+    lightSpacePos = lightSpaceMatrix * model * vec4(pos, 1.0);
 }

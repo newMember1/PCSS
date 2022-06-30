@@ -1,4 +1,5 @@
 #include "scene.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 Scene::Scene()
 {
@@ -26,10 +27,12 @@ void Scene::init()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 
-    modelA = glm::translate(modelA, glm::vec3(-0.5, 0.6, 0));
-    modelB = glm::translate(modelB, glm::vec3(0.5, 0.8, 0));
-    modelC = glm::scale(modelC, glm::vec3(3, 0.1, 3));
-    view = cam.GetViewMatrix();
+    modelA = glm::translate(modelA, glm::vec3(-0.7, 1.0, 0));
+    modelB = glm::translate(modelB, glm::vec3(0.7, 1.2, 0));
+    modelC = glm::scale(modelC, glm::vec3(10, 0.1, 10));
+
+    // view = cam.GetViewMatrix();
+    view = glm::lookAt(cam.Position, glm::vec3(0), glm::vec3(0, 1, 0));
     projection = glm::perspective(cam.Zoom, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 
     renderShadow.use();
