@@ -5,7 +5,7 @@ out vec4 color;
 
 void main()
 {             
-    float a = dep;
+    float a = gl_FragCoord.z;
     float b = a * a;
     float c = a * b;
     float d = b * b;

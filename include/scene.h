@@ -30,8 +30,8 @@ private:
     glm::mat4 lightProjection;
     glm::mat4 lightView;
 
-    Camera cam{glm::vec3(0.0f, 2.0f, 3.0f)};
-    glm::vec3 lightPos{0.5, 10, 1};
+    Camera cam{glm::vec3(0.0f, 3.0f, 5.0f)};
+    glm::vec3 lightPos{3, 10, 3};
     glm::mat4 modelA{1.0f};
     glm::mat4 modelB{1.0f};
     glm::mat4 modelC{1.0f};

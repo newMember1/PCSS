@@ -27,8 +27,8 @@ void Scene::init()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 
-    modelA = glm::translate(modelA, glm::vec3(-0.7, 1.0, 0));
-    modelB = glm::translate(modelB, glm::vec3(0.7, 1.2, 0));
+    modelA = glm::translate(modelA, glm::vec3(-0.8, 1.3, 0));
+    modelB = glm::translate(modelB, glm::vec3(0.8, 1.5, 0));
     modelC = glm::scale(modelC, glm::vec3(10, 0.1, 10));
 
     // view = cam.GetViewMatrix();
@@ -41,7 +41,7 @@ void Scene::init()
     renderShadow.release();
 
     float near = 1.0f;
-    float far = 15.0f;
+    float far = 20.0f;
     lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near, far);
     lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 }
@@ -116,14 +116,17 @@ void Scene::render()
     renderShadow.setMat4("lightSpaceMatrix", lightProjection * lightView);
 
     //draw cube A
+    renderShadow.setVec3("baseColor", {0.1, 0.3, 0.5});
     renderShadow.setMat4("model", modelA);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
     
     //draw cube B
+    renderShadow.setVec3("baseColor", {0.5, 0.3, 0.1});
     renderShadow.setMat4("model", modelB);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
     //draw cube C
+    renderShadow.setVec3("baseColor", {0.3, 0.7, 0.3});
     renderShadow.setMat4("model", modelC);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
