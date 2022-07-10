@@ -8,5 +8,5 @@ message(${projectName})
 include_directories(${ROOT_DIR}/include)
 link_directories(${ROOT_DIR}/lib)
 
-add_executable(${projectName} ${ROOT_DIR}/src/main.cpp ${ROOT_DIR}/src/scene.cpp ${ROOT_DIR}/src/glad.c)
+add_executable(${projectName} ${ROOT_DIR}/src/main.cpp ${ROOT_DIR}/src/scene.cpp ${ROOT_DIR}/src/glad.c ${ROOT_DIR}/src/objloader.cpp)
 target_link_libraries(${projectName} ${ROOT_DIR}/lib/libglfw3.a dl m GL X11 pthread)

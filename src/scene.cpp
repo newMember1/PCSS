@@ -1,5 +1,66 @@
 #include "scene.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include "objloader.h"
+
+Scene::ObjModel::ObjModel(std::string path)
+{
+    if(!objLoader::load(path, verts, vIndexes, normals, nIndexes))
+        return;
+
+    // for(int i = 0; i < verts.size(); ++i)
+    //     std::cout<<"v " <<verts[i].x<<" "<<verts[i].y << " "<<verts[i].z<<std::endl;
+    // for(int j = 0; j < vIndexes.size(); ++j)
+    //     std::cout<<"f "<<vIndexes[j][0]<<" "<<vIndexes[j][1]<<" "<<vIndexes[j][2]<<std::endl;
+    
+    // getchar();
+
+    std::cout<<"objLoader load done..."<<std::endl;
+
+    //verts normalize
+    float maxV = 1e-6;
+    for(auto v : verts)
+        maxV = glm::max(glm::max(v.x, v.y), glm::max(v.z, maxV));
+    for(auto & v: verts)
+        v = v / maxV;
+
+    std::vector<float> tVerts;
+    std::vector<unsigned int> tIndexes;
+
+    for(auto v : verts)
+    {
+        tVerts.push_back(v.x);
+        tVerts.push_back(v.y);
+        tVerts.push_back(v.z);
+    }
+    for(auto i : vIndexes)
+    {
+        tIndexes.push_back(i[0]);
+        tIndexes.push_back(i[1]);
+        tIndexes.push_back(i[2]);
+    }
+
+    //vao
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * tVerts.size(), &tVerts[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * tIndexes.size(), &tIndexes[0], GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+}
+
+void Scene::ObjModel::render()
+{
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, vIndexes.size() * 3, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
 
 Scene::Scene()
 {
@@ -27,9 +88,10 @@ void Scene::init()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 
-    modelA = glm::translate(modelA, glm::vec3(-0.8, 1.3, 0));
-    modelB = glm::translate(modelB, glm::vec3(0.8, 1.5, 0));
+    modelA = glm::translate(modelA, glm::vec3(-0.8, 1.7, 0));
+    modelB = glm::translate(modelB, glm::vec3(0.8, 1.9, 0));
     modelC = glm::scale(modelC, glm::vec3(10, 0.1, 10));
+    bunnyModel = glm::translate(bunnyModel, glm::vec3(0, 0.5, 0));
 
     // view = cam.GetViewMatrix();
     view = glm::lookAt(cam.Position, glm::vec3(0), glm::vec3(0, 1, 0));
@@ -86,17 +148,21 @@ void Scene::renderLightDepth()
     shadowDepthShader.setMat4("lightSpaceMatrix", lightProjection * lightView);
     glBindVertexArray(cubeVao);
 
-    //cube A
-    shadowDepthShader.setMat4("model", modelA);
-    glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
+    // //cube A
+    // shadowDepthShader.setMat4("model", modelA);
+    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
-    //cube B
-    shadowDepthShader.setMat4("model", modelB);
-    glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
+    // //cube B
+    // shadowDepthShader.setMat4("model", modelB);
+    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
     //cube C
     shadowDepthShader.setMat4("model", modelC);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
+
+    //bunny
+    shadowDepthShader.setMat4("model", bunnyModel);
+    model.render();
 
     shadowDepthShader.release();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -110,20 +176,25 @@ void Scene::render()
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindVertexArray(cubeVao);
+    //draw bunny
     renderShadow.use();
+    renderShadow.setVec3("baseColor", {0.5, 0.3, 0.1});
+    renderShadow.setMat4("model", bunnyModel);
+    model.render();
+
+    glBindVertexArray(cubeVao);
     renderShadow.setInt("shadowMap", 0);
     renderShadow.setMat4("lightSpaceMatrix", lightProjection * lightView);
 
-    //draw cube A
-    renderShadow.setVec3("baseColor", {0.1, 0.3, 0.5});
-    renderShadow.setMat4("model", modelA);
-    glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
+    // //draw cube A
+    // renderShadow.setVec3("baseColor", {0.1, 0.3, 0.5});
+    // renderShadow.setMat4("model", modelA);
+    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
     
-    //draw cube B
-    renderShadow.setVec3("baseColor", {0.5, 0.3, 0.1});
-    renderShadow.setMat4("model", modelB);
-    glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
+    // //draw cube B
+    // renderShadow.setVec3("baseColor", {0.5, 0.3, 0.1});
+    // renderShadow.setMat4("model", modelB);
+    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
     //draw cube C
     renderShadow.setVec3("baseColor", {0.3, 0.7, 0.3});

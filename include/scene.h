@@ -15,6 +15,22 @@ public:
     Scene();
     void render();
 
+    class ObjModel
+    {
+    public:
+        ObjModel(std::string path);
+        void render();
+    private:
+        unsigned int vao;
+        unsigned int vbo;
+        unsigned int ebo;
+
+        std::vector<glm::vec3> verts;
+        std::vector<std::vector<int>> vIndexes;
+        std::vector<glm::vec3> normals;
+        std::vector<std::vector<int>> nIndexes;
+    };
+
 private:
     void init();
     void setupShadowTexture();
@@ -24,17 +40,20 @@ private:
     void initMatrix();
     void updateMatrix(Camera & cam, glm::mat4 rotate);
 
+    ObjModel model{"../resources/bunny.obj"};
+
     Shader renderShadow{"../shaders/renderShadow.vert", "../shaders/renderShadow.frag"};
     Shader shadowDepthShader{"../shaders/genShadow.vert", "../shaders/genShadow.frag"};
 
     glm::mat4 lightProjection;
     glm::mat4 lightView;
 
-    Camera cam{glm::vec3(0.0f, 3.0f, 5.0f)};
-    glm::vec3 lightPos{3, 10, 3};
+    Camera cam{glm::vec3(1.0f, 2.0f, 3.0f)};
+    glm::vec3 lightPos{3, 5, 3};
     glm::mat4 modelA{1.0f};
     glm::mat4 modelB{1.0f};
     glm::mat4 modelC{1.0f};
+    glm::mat4 bunnyModel{1.0f};
     glm::mat4 view{1.0f};
     glm::mat4 projection{1.0f};
 
