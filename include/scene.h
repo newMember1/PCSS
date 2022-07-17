@@ -14,21 +14,26 @@ class Scene
 public:
     Scene();
     void render();
+    void updateWidthAndHeight(float width, float height);
 
     class ObjModel
     {
     public:
         ObjModel(std::string path);
-        void render();
+        void render(Shader& shader);
+
+        Shader objShader{"../shaders/renderObjShadow.vert", "../shaders/renderObjShadow.frag"};
     private:
         unsigned int vao;
         unsigned int vbo;
+        unsigned int nbo;
         unsigned int ebo;
 
-        std::vector<glm::vec3> verts;
-        std::vector<std::vector<int>> vIndexes;
-        std::vector<glm::vec3> normals;
-        std::vector<std::vector<int>> nIndexes;
+        std::vector<float> buffers;
+        std::vector<float> verts;
+        std::vector<unsigned int> vIndexes;
+        std::vector<float> normals;
+        std::vector<unsigned int> nIndexes;
     };
 
 private:
@@ -40,7 +45,7 @@ private:
     void initMatrix();
     void updateMatrix(Camera & cam, glm::mat4 rotate);
 
-    ObjModel model{"../resources/bunny.obj"};
+    ObjModel model{"../resources/tree.obj"};
 
     Shader renderShadow{"../shaders/renderShadow.vert", "../shaders/renderShadow.frag"};
     Shader shadowDepthShader{"../shaders/genShadow.vert", "../shaders/genShadow.frag"};
@@ -49,11 +54,11 @@ private:
     glm::mat4 lightView;
 
     Camera cam{glm::vec3(1.0f, 2.0f, 3.0f)};
-    glm::vec3 lightPos{3, 5, 3};
+    glm::vec3 lightPos{3, 5, -3};
     glm::mat4 modelA{1.0f};
     glm::mat4 modelB{1.0f};
     glm::mat4 modelC{1.0f};
-    glm::mat4 bunnyModel{1.0f};
+    glm::mat4 generalModel{1.0f};
     glm::mat4 view{1.0f};
     glm::mat4 projection{1.0f};
 

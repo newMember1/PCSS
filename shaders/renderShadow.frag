@@ -35,5 +35,5 @@ void main()
     
     // vec4 dep = texture(shadowMap, tLightSpacePos.xy / 2.0 + 0.5);
     float shadow = PCF(3, tLightSpacePos.xy / 2.0 + 0.5, currentDep);
-    gColor = (1 - shadow) * vec4(baseColor, 1.0);
+    gColor = (1 - shadow)* vec4(baseColor, 1.0);
 }
