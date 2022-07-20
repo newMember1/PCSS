@@ -4,61 +4,34 @@
 
 Scene::ObjModel::ObjModel(std::string path)
 {
-    if(!objLoader::load(path, verts, vIndexes, normals, nIndexes))
+    if(!loadObjModel(path, verts, normals, true))
         return;
 
-    // for(int i = 0; i < verts.size(); ++i)
-    //     std::cout<<"v " <<verts[i].x<<" "<<verts[i].y << " "<<verts[i].z<<std::endl;
-    // for(int j = 0; j < vIndexes.size(); ++j)
-    //     std::cout<<"f "<<vIndexes[j][0]<<" "<<vIndexes[j][1]<<" "<<vIndexes[j][2]<<std::endl;
-    
-    // getchar();
-
     std::cout<<"objLoader load done..."<<std::endl;
-
-    //verts normalize
-    float maxV = 1e-6;
-    for(auto v : verts)
-        maxV = glm::max(glm::max(v.x, v.y), glm::max(v.z, maxV));
-    for(auto & v: verts)
-        v = v / maxV;
-
-    std::vector<float> tVerts;
-    std::vector<unsigned int> tIndexes;
-
-    for(auto v : verts)
-    {
-        tVerts.push_back(v.x);
-        tVerts.push_back(v.y);
-        tVerts.push_back(v.z);
-    }
-    for(auto i : vIndexes)
-    {
-        tIndexes.push_back(i[0]);
-        tIndexes.push_back(i[1]);
-        tIndexes.push_back(i[2]);
-    }
 
     //vao
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ebo);
+    glGenBuffers(1, &nbo);
     glBindVertexArray(vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * tVerts.size(), &tVerts[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * tIndexes.size(), &tIndexes[0], GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * verts.size(), &verts[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, nbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * normals.size(), &normals[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 }
 
-void Scene::ObjModel::render()
+void Scene::ObjModel::render(Shader & shader)
 {
     glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, vIndexes.size() * 3, GL_UNSIGNED_INT, 0);
+    shader.use();
+    glDrawArrays(GL_TRIANGLES, 0, verts.size() / 3);
+    shader.release();
     glBindVertexArray(0);
 }
 
@@ -91,7 +64,7 @@ void Scene::init()
     modelA = glm::translate(modelA, glm::vec3(-0.8, 1.7, 0));
     modelB = glm::translate(modelB, glm::vec3(0.8, 1.9, 0));
     modelC = glm::scale(modelC, glm::vec3(10, 0.1, 10));
-    bunnyModel = glm::translate(bunnyModel, glm::vec3(0, 0.5, 0));
+    generalModel = glm::scale(generalModel, glm::vec3(1.2, 1.2, 1.2));
 
     // view = cam.GetViewMatrix();
     view = glm::lookAt(cam.Position, glm::vec3(0), glm::vec3(0, 1, 0));
@@ -101,6 +74,12 @@ void Scene::init()
     renderShadow.setMat4("view", view);
     renderShadow.setMat4("projection", projection);
     renderShadow.release();
+
+    model.objShader.use();
+    model.objShader.setMat4("model", generalModel);
+    model.objShader.setMat4("view", view);
+    model.objShader.setMat4("projection", projection);
+    model.objShader.release();
 
     float near = 1.0f;
     float far = 20.0f;
@@ -148,21 +127,13 @@ void Scene::renderLightDepth()
     shadowDepthShader.setMat4("lightSpaceMatrix", lightProjection * lightView);
     glBindVertexArray(cubeVao);
 
-    // //cube A
-    // shadowDepthShader.setMat4("model", modelA);
-    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
-
-    // //cube B
-    // shadowDepthShader.setMat4("model", modelB);
-    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
-
-    //cube C
+    //cube
     shadowDepthShader.setMat4("model", modelC);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
     //bunny
-    shadowDepthShader.setMat4("model", bunnyModel);
-    model.render();
+    shadowDepthShader.setMat4("model", generalModel);
+    model.render(shadowDepthShader);
 
     shadowDepthShader.release();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -177,30 +148,40 @@ void Scene::render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //draw bunny
-    renderShadow.use();
-    renderShadow.setVec3("baseColor", {0.5, 0.3, 0.1});
-    renderShadow.setMat4("model", bunnyModel);
-    model.render();
+    model.objShader.use();
+    model.objShader.setVec3("baseColor", {0.5, 0.3, 0.1});
+    model.objShader.setInt("shadowMap", 0);
+    model.objShader.setMat4("lightSpaceMatrix", lightProjection * lightView);
+    model.render(model.objShader);
 
     glBindVertexArray(cubeVao);
+    renderShadow.use();
     renderShadow.setInt("shadowMap", 0);
     renderShadow.setMat4("lightSpaceMatrix", lightProjection * lightView);
 
-    // //draw cube A
-    // renderShadow.setVec3("baseColor", {0.1, 0.3, 0.5});
-    // renderShadow.setMat4("model", modelA);
-    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
-    
-    // //draw cube B
-    // renderShadow.setVec3("baseColor", {0.5, 0.3, 0.1});
-    // renderShadow.setMat4("model", modelB);
-    // glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
-
-    //draw cube C
+    //draw cube
     renderShadow.setVec3("baseColor", {0.3, 0.7, 0.3});
     renderShadow.setMat4("model", modelC);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
     renderShadow.release();
     glBindVertexArray(0);
+}
+
+void Scene::updateWidthAndHeight(float width, float height)
+{
+    this->width = width;
+    this->height = height;
+    projection = glm::perspective(cam.Zoom, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+    shadowDepthShader.use();
+    shadowDepthShader.setMat4("projection", projection);
+    shadowDepthShader.release();
+
+    model.objShader.use();
+    model.objShader.setMat4("projection", projection);
+    model.objShader.release();
+
+    renderShadow.use();
+    renderShadow.setMat4("projection", projection);
+    renderShadow.release();
 }

@@ -5,6 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "gui.h"
+
 #include "shader.h"
 #include "camera.h"
 #include "scene.h"
@@ -67,6 +69,8 @@ int main(void)
     projection = glm::perspective(camera.Zoom, (GLfloat)SCR_WIDTH / (GLfloat)SCR_HEIGHT, 0.1f, 100.0f);
     std::unique_ptr<Scene> my_scene(new Scene());
 
+    GUI::init(window);
+
     while (!glfwWindowShouldClose(window))
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -75,7 +79,10 @@ int main(void)
         lastFrame = currentFrame;
         processInput(window);
 
+        my_scene->updateWidthAndHeight(SCR_WIDTH, SCR_HEIGHT);
         my_scene->render();
+
+        GUI::render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -108,6 +115,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
 }
 
 // glfw: whenever the mouse moves, this callback is called
