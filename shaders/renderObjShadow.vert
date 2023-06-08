@@ -7,14 +7,18 @@ uniform mat4 view;
 uniform mat4 projection;
 
 uniform mat4 lightSpaceMatrix;
+uniform vec3 viewPos;
 
 out vec3 outNormal;
 out vec4 lightSpacePos;
+out vec3 viewDir;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(pos, 1.0f);
+    vec3 worldPos = (model * vec4(pos, 1.0f)).xyz;
+    gl_Position = projection * view * vec4(worldPos, 1.0f);
 
-    outNormal = vec3(model * view * vec4(normal, 1.0));
+    outNormal = vec3(model * vec4(normal, 1.0));
     lightSpacePos = lightSpaceMatrix * model * vec4(pos, 1.0);
+    viewDir = viewPos - worldPos;
 }

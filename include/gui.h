@@ -8,10 +8,11 @@ class GUI
 public:
     static void init(GLFWwindow *window);
     static void render();
-    static int getLightSize();
+    static int getLightSize(){return lightSize;};
 
 private:
     static int lightSize;
+    static int sampleSize;
 };
 
 #endif

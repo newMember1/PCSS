@@ -9,7 +9,7 @@ Scene::ObjModel::ObjModel(std::string path)
 
     std::cout<<"objLoader load done..."<<std::endl;
 
-    //vao
+    //arrange vao
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &nbo);
@@ -61,10 +61,12 @@ void Scene::init()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 
-    modelA = glm::translate(modelA, glm::vec3(-0.8, 1.7, 0));
-    modelB = glm::translate(modelB, glm::vec3(0.8, 1.9, 0));
-    modelC = glm::scale(modelC, glm::vec3(10, 0.1, 10));
-    generalModel = glm::scale(generalModel, glm::vec3(1.2, 1.2, 1.2));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)3);
+
+    /*initialize MVP matrix*/
+    planeModel = glm::scale(planeModel, glm::vec3(10, 0.1, 10));
+    objectModel = glm::scale(objectModel, glm::vec3(1.2, 1.2, 1.2));
 
     // view = cam.GetViewMatrix();
     view = glm::lookAt(cam.Position, glm::vec3(0), glm::vec3(0, 1, 0));
@@ -74,12 +76,6 @@ void Scene::init()
     renderShadow.setMat4("view", view);
     renderShadow.setMat4("projection", projection);
     renderShadow.release();
-
-    model.objShader.use();
-    model.objShader.setMat4("model", generalModel);
-    model.objShader.setMat4("view", view);
-    model.objShader.setMat4("projection", projection);
-    model.objShader.release();
 
     float near = 1.0f;
     float far = 20.0f;
@@ -128,11 +124,11 @@ void Scene::renderLightDepth()
     glBindVertexArray(cubeVao);
 
     //cube
-    shadowDepthShader.setMat4("model", modelC);
+    shadowDepthShader.setMat4("model", planeModel);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
-    //bunny
-    shadowDepthShader.setMat4("model", generalModel);
+    //obj model
+    shadowDepthShader.setMat4("model", objectModel);
     model.render(shadowDepthShader);
 
     shadowDepthShader.release();
@@ -141,31 +137,38 @@ void Scene::renderLightDepth()
 
 void Scene::render()
 {
+    //first render a depth map from light position
     renderLightDepth();
 
     glViewport(0, 0, width, height);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //draw bunny
-    model.objShader.use();
-    model.objShader.setVec3("baseColor", {0.5, 0.3, 0.1});
-    model.objShader.setInt("shadowMap", 0);
-    model.objShader.setMat4("lightSpaceMatrix", lightProjection * lightView);
-    model.render(model.objShader);
-
-    glBindVertexArray(cubeVao);
+    //draw obj model
     renderShadow.use();
+    renderShadow.setVec3("lightDir", lightPos);
+    renderShadow.setVec3("viewPos", cam.Position);
+    renderShadow.setIvec2("LIGHTSIZE", lightSize);
+    renderShadow.setMat4("model", objectModel);
+    renderShadow.setVec3("baseColor", {0.5, 0.3, 0.1});
     renderShadow.setInt("shadowMap", 0);
     renderShadow.setMat4("lightSpaceMatrix", lightProjection * lightView);
+    model.render(renderShadow);
 
     //draw cube
+    glBindVertexArray(cubeVao);
+    renderShadow.use();
+    renderShadow.setMat4("model", planeModel);
     renderShadow.setVec3("baseColor", {0.3, 0.7, 0.3});
-    renderShadow.setMat4("model", modelC);
     glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size() / 3);
 
     renderShadow.release();
     glBindVertexArray(0);
+}
+
+void Scene::updateLightSize(glm::ivec2 size)
+{
+    lightSize = size;
 }
 
 void Scene::updateWidthAndHeight(float width, float height)
@@ -176,10 +179,6 @@ void Scene::updateWidthAndHeight(float width, float height)
     shadowDepthShader.use();
     shadowDepthShader.setMat4("projection", projection);
     shadowDepthShader.release();
-
-    model.objShader.use();
-    model.objShader.setMat4("projection", projection);
-    model.objShader.release();
 
     renderShadow.use();
     renderShadow.setMat4("projection", projection);

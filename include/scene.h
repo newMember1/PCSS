@@ -15,6 +15,7 @@ public:
     Scene();
     void render();
     void updateWidthAndHeight(float width, float height);
+    void updateLightSize(glm::ivec2 size);
 
     class ObjModel
     {
@@ -22,7 +23,6 @@ public:
         ObjModel(std::string path);
         void render(Shader& shader);
 
-        Shader objShader{"../shaders/renderObjShadow.vert", "../shaders/renderObjShadow.frag"};
     private:
         unsigned int vao;
         unsigned int vbo;
@@ -45,23 +45,26 @@ private:
     void initMatrix();
     void updateMatrix(Camera & cam, glm::mat4 rotate);
 
-    ObjModel model{"../resources/tree.obj"};
+    ObjModel model{"../resources/bunny.obj"};
 
-    Shader renderShadow{"../shaders/renderShadow.vert", "../shaders/renderShadow.frag"};
+    // Shader renderShadow{"../shaders/renderShadow.vert", "../shaders/renderShadow.frag"};
+    Shader renderShadow{"../shaders/renderObjShadow.vert", "../shaders/renderObjShadow.frag"};
     Shader shadowDepthShader{"../shaders/genShadow.vert", "../shaders/genShadow.frag"};
 
+    //light information
+    glm::vec3 lightPos{3, 5, -3};
     glm::mat4 lightProjection;
     glm::mat4 lightView;
+    glm::ivec2 lightSize;
 
+    //render information
     Camera cam{glm::vec3(1.0f, 2.0f, 3.0f)};
-    glm::vec3 lightPos{3, 5, -3};
-    glm::mat4 modelA{1.0f};
-    glm::mat4 modelB{1.0f};
-    glm::mat4 modelC{1.0f};
-    glm::mat4 generalModel{1.0f};
+    glm::mat4 planeModel{1.0f};
+    glm::mat4 objectModel{1.0f};
     glm::mat4 view{1.0f};
     glm::mat4 projection{1.0f};
 
+    //frame buffer
     unsigned int framebuffer;
 
     unsigned int shadowMap;
@@ -73,14 +76,6 @@ private:
 
     unsigned int width;
     unsigned int height;
-
-    unsigned int tex3D;
-
-    unsigned int texWidth = 64;
-    unsigned int texHeight = 64;
-    unsigned int texDepth = 64;
-
-    std::vector<float> sliceDatas;
 
     std::vector<float> cubeVertices = {
     // positions          // normals           // texture coords

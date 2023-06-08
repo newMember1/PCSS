@@ -79,6 +79,7 @@ int main(void)
         lastFrame = currentFrame;
         processInput(window);
 
+        my_scene->updateLightSize(glm::ivec2{GUI::getLightSize()});
         my_scene->updateWidthAndHeight(SCR_WIDTH, SCR_HEIGHT);
         my_scene->render();
 

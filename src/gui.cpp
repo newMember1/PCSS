@@ -5,8 +5,7 @@
 #include "imgui_impl_opengl3.h"
 
 int GUI::lightSize = 1;
-float GUI::f = 0.0f;
-int GUI::counter = 1;
+int GUI::sampleSize = 10;
 
 void GUI::init(GLFWwindow *window)
 {
@@ -30,6 +29,7 @@ void GUI::render()
     ImGui::Begin("Setting Window");                          // Create a window called "Hello, world!" and append into it.
 
     ImGui::SliderInt("light size", &lightSize, 1, 10);
+    ImGui::SliderInt("sample size", &sampleSize, 10, 100);
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
